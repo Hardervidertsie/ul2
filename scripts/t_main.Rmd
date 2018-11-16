@@ -1,0 +1,62 @@
+---
+title: "ul2 kd heatmap"
+author: "Steven Wink"
+date: "14 november 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(pheatmap)
+require(tidyr)
+require(dplyr)
+require("RColorBrewer")
+```
+
+```{r}
+
+source("t01_kd_load_data.R")
+source("t02_select_data.R")
+source("t03_format_data.R")
+
+```
+
+
+# analysis plan:  
+* heatmap with siNrf2 sirRelA siCtrl1 time curves as columns
+* rows: Nrf2, srxn1, a20 and ICAM1 dose responses, DMSO en DEM, repeating A20 and ICAM1 + TNF below.
+* euclidean clustering of dose-response sets of rows  
+
+## load data  
+```{r}
+
+raw_data <- load_data()
+head(raw_data)
+
+```
+
+
+## select data  
+```{r}
+sel_data <- select_data(raw_data)
+head(sel_data)
+```
+
+
+## format data
+```{r}
+formatted_data <- format_data(sel_data)
+tail(formatted_data)
+
+```
+
+## plot data
+
+still only in t04_plot_data.R
+
+
+
+

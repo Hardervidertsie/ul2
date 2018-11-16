@@ -1,0 +1,179 @@
+# HepG2 & hipscHEP BioSpyder figure ul2 paper
+
+## heatmap of BioSpyder data: top 30 genes oxidative stress and inflammation pathway.
+
+* explore adding DNA-damage pathway and UPR  
+
+```{r}
+options(stringsAsFactors = FALSE)
+```
+
+
+```{r}
+require(dplyr)
+require(tidyr)
+require(pheatmap)
+require(stringr)
+require(RColorBrewer)
+```
+
+```{r}
+source("p01_load_biospyder_data.R")
+source("p02_add_metadata_select.R")
+source("p03_gene_FC_sel.R")
+source("p04_format_shape.R")
+```
+
+
+## load data
+```{r}
+#rm(list=ls())
+raw_data <- load_data()
+```
+
+## add metadata and select annotated genes
+
+```{r}
+sel_filter_data <- meta_filter(input = raw_data, meta_file_path = "../metadata/Top30genes_TFregulon_DoRothEA.txt")
+head(sel_filter_data)
+summary(sel_filter_data)
+
+
+```
+
+
+## gene selection  
+* top 30 per pathway/ cell line  
+
+```{r}
+#FC_filter_data <- gene_FC_filter(sel_filter_data)
+head(FC_filter_data)
+# skip for 30 one
+FC_filter_data <- sel_filter_data
+
+```
+
+## shape data to heatmap suitable square form  
+* genes as rows  
+* CELL_ID
+
+```{r}
+formatted_data <- probe_summarise_format_data(FC_filter_data)
+```
+
+
+## create heatmap  
+```{r}
+formatted_data <- na.omit(formatted_data)
+
+ind_inf <- sapply(formatted_data, is.infinite)
+sum(ind_inf)
+
+
+annotation <- formatted_data %>% ungroup() %>% select(GeneSymbol : INFLAM) %>% as.data.frame()
+heatmap_data <- formatted_data %>% ungroup() %>% 
+  select(-(GeneSymbol : INFLAM)) %>% as.data.frame()
+head(annotation)
+rownames(heatmap_data) <- annotation$GeneSymbol
+
+colnames(heatmap_data)
+
+col_anot <- data.frame(cell_line = gsub("_", "", 
+                                        str_match(colnames(heatmap_data), "^[A-Za-z2]{5,9}_")
+                                        ),
+                       treatment = gsub("[_ ]", "", 
+                                        str_match(colnames(heatmap_data), "_[A-Za-z]{4,5} ")
+                                        ),
+                       TNF = str_match(colnames(heatmap_data), "[YESNO]{2,3}"),
+                       concentration = str_match(colnames(heatmap_data), "C[1-6]{1}$")
+)
+
+col_anot$concentration <- as.numeric(gsub("C", "",col_anot$concentration))
+
+rownames(col_anot) <- colnames(heatmap_data)
+row_anot <- annotation
+rownames(row_anot) <- annotation$GeneSymbol
+row_anot$GeneSymbol <- NULL
+
+
+tmpcol <-brewer.pal(9, "PuOr")
+colfunc <- colorRampPalette(c(tmpcol[1], "white"))
+colfunc2 <- colorRampPalette(c("white", tmpcol[9]))
+my_color <- c(colfunc(50), colfunc2(50))
+
+pie(rep(1, length(my_color)), labels = sprintf("%d (%s)", seq_along(my_color), 
+                                                my_color), col = my_color)
+
+
+row_anot$OX <- factor(row_anot$OX)
+row_anot$INFLAM <- factor(row_anot$INFLAM)
+#row_anot$UPR <- factor(row_anot$UPR)
+#row_anot$DDR <- factor(row_anot$DDR)
+
+
+
+anot_colors = list(OX = c("white", "blue"),
+                   INFLAM = c("white", "red"),
+                   TNF = c("grey", "black")
+                   )
+                   #,
+                   #UPR = c("white", "green"),
+                   #DDR = c("white", "purple"))
+names(anot_colors$OX) <- c(0,1)
+names(anot_colors$INFLAM) <- c(0,1)
+names(anot_colors$TNF) <- c("YES", "NO")
+#names(anot_colors$UPR) <- c(0,1)
+#names(anot_colors$DDR) <- c(0,1)
+
+my_breaks <- c(
+  seq(min(heatmap_data)-0.1, 0, length.out = 50),
+  seq(0.01, max(heatmap_data)+0.1, length.out = 51)
+)
+
+
+
+
+
+pdf(file = "../biospyder_results/heatmap_all_30preselected_OX_INFLAM.pdf", height = 14, width = 22)
+
+pheatmap(heatmap_data, cluster_rows = TRUE, cluster_cols = FALSE, color =  my_color,
+         annotation_row = row_anot, annotation_col = col_anot,
+         annotation_colors = anot_colors, breaks = my_breaks)
+
+dev.off()
+
+
+# adapt to OX and INFLAM
+
+
+row_anot <- annotation %>% filter(OX == 1 | INFLAM == 1) %>% 
+  select(GeneSymbol:INFLAM)
+rownames(row_anot) <- row_anot$GeneSymbol
+row_anot$GeneSymbol <- NULL
+row_anot$OX <- factor(row_anot$OX)
+row_anot$INFLAM <- factor(row_anot$INFLAM)
+
+
+anot_colors = list(OX = c("white", "blue"),
+                   INFLAM = c("white", "red")
+)
+
+names(anot_colors$OX) <- c(0,1)
+names(anot_colors$INFLAM) <- c(0,1)
+
+heatmap_data_OXINFLAM <- heatmap_data[rownames(heatmap_data) %in%  rownames(row_anot), ]
+colnames(heatmap_data_OXINFLAM)
+
+pdf(file = "../biospyder_results/heatmap_Ox_Inflam_the30.pdf", height = 18, width = 16)
+pheatmap(heatmap_data_OXINFLAM, cluster_rows = TRUE, cluster_cols = FALSE, color =  my_color,
+          annotation_col = col_anot,annotation_row = row_anot,
+         annotation_colors = anot_colors, breaks = my_breaks
+         )
+dev.off()
+
+
+```
+
+
+
+
