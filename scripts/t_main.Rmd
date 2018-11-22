@@ -10,17 +10,21 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+require(ggplot2)
 require(pheatmap)
 require(tidyr)
 require(dplyr)
 require("RColorBrewer")
+require(stringr)
 ```
 
 ```{r}
-
+rm(list=ls())
 source("t01_kd_load_data.R")
+source("t01b_normalize_data.R")
 source("t02_select_data.R")
 source("t03_format_data.R")
+source("t04_plot_data.R")
 
 ```
 
@@ -32,16 +36,41 @@ source("t03_format_data.R")
 
 ## load data  
 ```{r}
+# relA erbij
+raw_data <- load_data(rela = FALSE)
 
-raw_data <- load_data()
-head(raw_data)
+```
+
+
+```{r}
+norm_data <- normalize_data(raw_data)
+head(norm_data)
+```
+
+## plot all data to build hypothesis model for publication
+
+```{r}
+norm_data <- norm_data %>% mutate(treatment = relevel(treatment, "DMSO"))
+
+pdf("../results_kd/all_kd_data_mm_normalized.pdf", height =10, width = 20)
+
+ggfun <- function(datain )   {ggplot(data = datain ,
+       aes( x = timeID, y = Integrated.Intensity, color = repID )) + 
+        geom_point() + facet_grid( treatment +dose_level  ~ siRNA + control  ) +
+    theme_classic() + ggtitle(unique(datain$cell_line))
+    
+}
+
+lapply(split(norm_data, norm_data$cell_line), ggfun)
+
+dev.off()
 
 ```
 
 
 ## select data  
 ```{r}
-sel_data <- select_data(raw_data)
+sel_data <- select_data(norm_data)
 head(sel_data)
 ```
 
@@ -49,14 +78,17 @@ head(sel_data)
 ## format data
 ```{r}
 formatted_data <- format_data(sel_data)
-tail(formatted_data)
 
+summary(formatted_data)
 ```
 
 ## plot data
 
 still only in t04_plot_data.R
 
+```{r}
+plot_data(input_data = formatted_data, pdf_name = "heatmap_reporter_Bas_colors_mmn",
+         scale_reporters = FALSE) # keep false 
 
-
+```
 

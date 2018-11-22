@@ -1,6 +1,6 @@
 
 meta_filter <- function(input, meta_file_path) {
-
+options(stringsAsFactors = FALSE)
   
   metadata <- read.table(file = meta_file_path, sep = "\t", header= TRUE, row.names = 1)
   metadata <- metadata[, c("TNF", "DEM")]

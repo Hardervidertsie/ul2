@@ -2,18 +2,7 @@
 
 format_data <- function(sel_data) {
 
-# create dose levels
 
-
-dose_level_table <- sel_data %>% group_by(cell_line,treatment, dose_uM) %>%
-  summarise() %>%
-  mutate(dose_level = 1: n())
-
-dose_level_table <- dose_level_table %>% mutate(dose_level = dose_level + 1) %>% 
-  mutate(dose_level = if_else(treatment == "DMSO", 1, dose_level))
-
-
-sel_data <- left_join(sel_data, dose_level_table, by = c("cell_line", "treatment", "dose_uM"))
 
 sel_data <- sel_data %>% mutate(row_id = paste(cell_line, treatment, control, dose_level))
 

@@ -18,6 +18,7 @@ require(RColorBrewer)
 ```
 
 ```{r}
+
 source("p01_load_biospyder_data.R")
 source("p02_add_metadata_select.R")
 source("p03_gene_FC_sel.R")
@@ -29,6 +30,7 @@ source("p04_format_shape.R")
 ```{r}
 #rm(list=ls())
 raw_data <- load_data()
+
 ```
 
 ## add metadata and select annotated genes
@@ -110,11 +112,22 @@ row_anot$INFLAM <- factor(row_anot$INFLAM)
 #row_anot$UPR <- factor(row_anot$UPR)
 #row_anot$DDR <- factor(row_anot$DDR)
 
-
-
+# Heatmap_all30preselected_Ox_Inflam
+# Parameter:	Color
+# 
+# Andro		#fc8eac
+# CDDO		#ccff00
+# Sulfo		Orange
+# TBHQ		#fff44f
+# 
+# HepG2		#00FFEF
+# hipscHEPS	#ffa089
+col_anot
 anot_colors = list(OX = c("white", "blue"),
                    INFLAM = c("white", "red"),
-                   TNF = c("grey", "black")
+                   TNF = c("grey", "black"),
+                   cell_line = c("#00FFEF", "#ffa089"),
+                   treatment = c("#fc8eac", "#ccff00", "Orange", "#fff44f")
                    )
                    #,
                    #UPR = c("white", "green"),
@@ -122,6 +135,11 @@ anot_colors = list(OX = c("white", "blue"),
 names(anot_colors$OX) <- c(0,1)
 names(anot_colors$INFLAM) <- c(0,1)
 names(anot_colors$TNF) <- c("YES", "NO")
+names(anot_colors$cell_line) <- c("HepG2", "hipscHEPS")
+names(anot_colors$treatment) <- c("Andro", "CDDO", "Sulfo", "TBHQ")
+      
+
+
 #names(anot_colors$UPR) <- c(0,1)
 #names(anot_colors$DDR) <- c(0,1)
 
@@ -134,7 +152,7 @@ my_breaks <- c(
 
 
 
-pdf(file = "../biospyder_results/heatmap_all_30preselected_OX_INFLAM.pdf", height = 14, width = 22)
+pdf(file = "../biospyder_results/heatmap_all_30preselected_OX_INFLAM_Bas_colors.pdf", height = 14, width = 22)
 
 pheatmap(heatmap_data, cluster_rows = TRUE, cluster_cols = FALSE, color =  my_color,
          annotation_row = row_anot, annotation_col = col_anot,
@@ -163,6 +181,9 @@ names(anot_colors$INFLAM) <- c(0,1)
 
 heatmap_data_OXINFLAM <- heatmap_data[rownames(heatmap_data) %in%  rownames(row_anot), ]
 colnames(heatmap_data_OXINFLAM)
+
+
+
 
 pdf(file = "../biospyder_results/heatmap_Ox_Inflam_the30.pdf", height = 18, width = 16)
 pheatmap(heatmap_data_OXINFLAM, cluster_rows = TRUE, cluster_cols = FALSE, color =  my_color,
